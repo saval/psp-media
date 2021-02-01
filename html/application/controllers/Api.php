@@ -104,4 +104,39 @@ class Api extends RestController
         $transaction = $this->transactions_model->getById($transaction_id);
         $this->response(['transaction' => $transaction], RestController::HTTP_CREATED);
     }
+    
+    public function withdrawal_post()
+    {
+        $this->load->helper(['form']);
+        $this->load->library('form_validation');
+        $this->load->model('transactions_model');
+        
+        if ($this->form_validation->run('withdrawal') == false) {
+            $errors = $this->form_validation->error_array();
+            $this->response([
+                'status' => false,
+                'error' => $errors
+            ], RestController::HTTP_BAD_REQUEST);
+        }
+        
+        $form = $this->input->post();
+        $form['amount'] = floatval($form['amount']);
+        $current_balance = $this->transactions_model->getBalanceByCustomerId($form['customer_id']);
+        if ($current_balance < $form['amount']) {
+            $this->response([
+                'status' => false,
+                'error' => 'Withdrawal amount must be less than current balance'
+            ], RestController::HTTP_BAD_REQUEST);
+        }
+        
+        $transaction_id = $this->transactions_model->withdrawal($form);
+        if (!$transaction_id) {
+            $this->response([
+                'status' => false,
+                'error' => 'Something wrong, please contact us if the error persists'
+            ], RestController::HTTP_INTERNAL_ERROR);
+        }
+        $transaction = $this->transactions_model->getById($transaction_id);
+        $this->response(['transaction' => $transaction], RestController::HTTP_CREATED);
+    }
 }

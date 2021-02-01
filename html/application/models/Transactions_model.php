@@ -17,6 +17,15 @@ class Transactions_model extends CI_Model
         return $this->addNew($data);
     }
     
+    public function withdrawal($data)
+    {
+        if (empty($data['customer_id']) || empty($data['amount'])) {
+            return false;
+        }
+        $data['amount'] = -$data['amount'];
+        return $this->addNew($data);
+    }
+    
     private function shouldBeBonusAdded($customer_id)
     {
         if (!$customer_id) {
@@ -64,5 +73,18 @@ class Transactions_model extends CI_Model
         }
         $sql = sprintf("SELECT * FROM %s WHERE id = %d", $this->table_name, $transaction_id);
         return $this->db->query($sql)->row_array();
+    }
+    
+    public function getBalanceByCustomerId($customer_id)
+    {
+        $sql = sprintf(
+            "SELECT SUM(amount) AS balance
+                        FROM %s
+                        WHERE customer_id = %d",
+            $this->table_name,
+            $customer_id
+        );
+        $row = $this->db->query($sql)->row_array();
+        return $row ? $row['balance'] : 0;
     }
 }

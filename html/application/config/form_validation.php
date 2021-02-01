@@ -63,7 +63,19 @@ $config = array(
         array(
             'field' => 'amount',
             'label' => 'Amount',
-            'rules' => 'required|numeric'
+            'rules' => 'required|numeric|greater_than[0]'
+        )
+    ),
+    'withdrawal' => array(
+        array(
+            'field' => 'customer_id',
+            'label' => 'Customer ID',
+            'rules' => 'required|numeric|valid_customer'
+        ),
+        array(
+            'field' => 'amount',
+            'label' => 'Amount',
+            'rules' => 'required|numeric|greater_than[0]'
         )
     )
 );
