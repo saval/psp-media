@@ -32,7 +32,7 @@ class Api extends RestController
         if (!$customer_id) {
             $this->response([
                 'status' => false,
-                'error' => ''
+                'error' => 'Something wrong, please contact us if the error persists'
             ], RestController::HTTP_INTERNAL_ERROR);
         }
         $customer = $this->customers_model->getById($customer_id);
@@ -75,5 +75,33 @@ class Api extends RestController
         }
         $customer = $this->customers_model->getById($customer_id);
         $this->response(['customer' => $customer], RestController::HTTP_OK);
+    }
+    
+    public function deposit_post()
+    {
+        $this->load->helper(['form']);
+        $this->load->library('form_validation');
+        $this->load->model('customers_model');
+        $this->load->model('transactions_model');
+        
+        if ($this->form_validation->run('deposit') == false) {
+            $errors = $this->form_validation->error_array();
+            $this->response([
+                'status' => false,
+                'error' => $errors
+            ], RestController::HTTP_BAD_REQUEST);
+        }
+        
+        $form = $this->input->post();
+        $customer = $this->customers_model->getById($form['customer_id']);
+        $transaction_id = $this->transactions_model->deposit($form, $customer['bonus']);
+        if (!$transaction_id) {
+            $this->response([
+                'status' => false,
+                'error' => 'Something wrong, please contact us if the error persists'
+            ], RestController::HTTP_INTERNAL_ERROR);
+        }
+        $transaction = $this->transactions_model->getById($transaction_id);
+        $this->response(['transaction' => $transaction], RestController::HTTP_CREATED);
     }
 }

@@ -17,12 +17,29 @@ class MY_Form_validation extends CI_Form_validation
         return true;
     }
     
+    /**
+     * Email uniqueness validator. With option to check all the rest accounts except specified.
+     */
     public function email_is_unique($email, $customer_id = null)
     {
         $this->CI->load->model('customers_model');
         $customer = $this->CI->customers_model->getByEmail($email, $customer_id);
         if ($customer) {
             $this->set_message('email_is_unique', 'Specified email already registered.');
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Customer ID validator. Only existing in the DB customers allowed.
+     */
+    public function valid_customer($customer_id)
+    {
+        $this->CI->load->model('customers_model');
+        $customer = $this->CI->customers_model->getById($customer_id);
+        if (!$customer) {
+            $this->set_message('valid_customer', 'Specified customer ID not found.');
             return false;
         }
         return true;

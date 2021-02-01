@@ -53,5 +53,17 @@ $config = array(
             'label' => 'Email',
             'rules' => 'valid_email'
         )
+    ),
+    'deposit' => array(
+        array(
+            'field' => 'customer_id',
+            'label' => 'Customer ID',
+            'rules' => 'required|numeric|valid_customer'
+        ),
+        array(
+            'field' => 'amount',
+            'label' => 'Amount',
+            'rules' => 'required|numeric'
+        )
     )
 );
