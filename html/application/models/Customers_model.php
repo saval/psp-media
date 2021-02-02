@@ -59,7 +59,8 @@ class Customers_model extends CI_Model
         if (!$db_data) {
             return false;
         }
-
+        $db_data['updated_date'] = date('Y-m-d H:i:s');
+        
         $this->db->trans_start();
         $this->db->where('id', $customer_id);
         $this->db->update('customer', $db_data);
