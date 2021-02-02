@@ -11,19 +11,36 @@ class Transactions_model extends CI_Model
         if (empty($data['customer_id']) || empty($data['amount'])) {
             return false;
         }
+        $this->db->trans_start();
         if ($this->shouldBeBonusAdded($data['customer_id']) && $bonus_percent) {
             $data['bonus_amount'] = number_format($data['amount'] * $bonus_percent / 100, 2);
         }
-        return $this->addNew($data);
+        $transaction_id = $this->addNew($data);
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            return false;
+        }
+        return $transaction_id;
     }
     
     public function withdrawal($data)
     {
         if (empty($data['customer_id']) || empty($data['amount'])) {
-            return false;
+            return [false, false];
         }
+        $this->db->trans_start();
+        $current_balance = $this->getBalanceByCustomerId($data['customer_id']);
+        if ($current_balance < $data['amount']) {
+            return [false, true];
+        }
+    
         $data['amount'] = -$data['amount'];
-        return $this->addNew($data);
+        $transaction_id = $this->addNew($data);
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === false) {
+            return [false, false];
+        }
+        return [$transaction_id, false];
     }
     
     private function shouldBeBonusAdded($customer_id)

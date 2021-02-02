@@ -121,20 +121,20 @@ class Api extends RestController
         
         $form = $this->input->post();
         $form['amount'] = floatval($form['amount']);
-        $current_balance = $this->transactions_model->getBalanceByCustomerId($form['customer_id']);
-        if ($current_balance < $form['amount']) {
-            $this->response([
-                'status' => false,
-                'error' => 'Withdrawal amount must be less than current balance'
-            ], RestController::HTTP_BAD_REQUEST);
-        }
-        
-        $transaction_id = $this->transactions_model->withdrawal($form);
+        list($transaction_id, $is_insufficient_balance) = $this->transactions_model->withdrawal($form);
         if (!$transaction_id) {
-            $this->response([
-                'status' => false,
-                'error' => 'Something wrong, please contact us if the error persists'
-            ], RestController::HTTP_INTERNAL_ERROR);
+            if ($is_insufficient_balance) {
+                $this->response([
+                    'status' => false,
+                    'error' => 'Withdrawal amount must be less than current balance'
+                ], RestController::HTTP_BAD_REQUEST);
+
+            } else {
+                $this->response([
+                    'status' => false,
+                    'error' => 'Something wrong, please contact us if the error persists'
+                ], RestController::HTTP_INTERNAL_ERROR);
+            }
         }
         $transaction = $this->transactions_model->getById($transaction_id);
         $this->response(['transaction' => $transaction], RestController::HTTP_CREATED);
