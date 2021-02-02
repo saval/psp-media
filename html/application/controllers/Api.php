@@ -139,4 +139,36 @@ class Api extends RestController
         $transaction = $this->transactions_model->getById($transaction_id);
         $this->response(['transaction' => $transaction], RestController::HTTP_CREATED);
     }
+    
+    public function report_get()
+    {
+        $this->load->helper(['form']);
+        $this->load->library('form_validation');
+        $this->load->model('transactions_model');
+
+        $from_date = $this->input->get('from_date');
+        $to_date = $this->input->get('to_date');
+        
+        $errors = [];
+        if (empty($from_date)) {
+            $errors[] = '[from_date] required';
+        } elseif (!preg_match('/[\d]{4}-[\d]{2}-[\d]{2}/', $from_date)) {
+            $errors[] = '[from_date] must be in the dddd-dd-dd format';
+        }
+        if (empty($to_date)) {
+            $errors[] = '[to_date] required';
+        } elseif (!preg_match('/[\d]{4}-[\d]{2}-[\d]{2}/', $to_date)) {
+            $errors[] = '[to_date] date must be in the dddd-dd-dd format';
+        }
+        
+        if ($errors) {
+            $this->response([
+                'status' => false,
+                'error' => $errors
+            ], RestController::HTTP_BAD_REQUEST);
+        }
+        
+        $report = $this->transactions_model->getReport($from_date, $to_date);
+        $this->response(['report' => $report], RestController::HTTP_OK);
+    }
 }

@@ -87,4 +87,26 @@ class Transactions_model extends CI_Model
         $row = $this->db->query($sql)->row_array();
         return $row ? $row['balance'] : 0;
     }
+    
+    public function getReport($from_date, $to_date)
+    {
+        if (!$from_date || !$to_date) {
+            return [];
+        }
+        $sql = sprintf(
+            "SELECT DATE(t.created_date) AS date, c.country_code,
+              COUNT(DISTINCT t.customer_id) AS unique_customers,
+              SUM(CASE WHEN t.amount > 0 THEN 1 ELSE 0 END) AS deposits_cnt,
+              FORMAT(SUM(CASE WHEN t.amount > 0 THEN t.amount ELSE 0 END), 2) AS total_deposits_amount,
+              SUM(CASE WHEN t.amount > 0 THEN 0 ELSE 1 END) AS withdrawals_cnt,
+              FORMAT(SUM(CASE WHEN t.amount > 0 THEN 0 ELSE t.amount END), 2) AS total_withdrawals_amount
+            FROM transaction t
+            JOIN customer c ON t.customer_id = c.id
+            WHERE t.created_date BETWEEN '%s' AND '%s'
+            GROUP BY DATE(t.created_date), c.country_code",
+            $from_date,
+            $to_date
+        );
+        return $this->db->query($sql)->result_array();
+    }
 }
